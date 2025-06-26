@@ -1,0 +1,5 @@
+{
+  "name": "Classification HRCT - Fibrose Pulmonaire",
+  "description": "Un outil d'aide au diagnostic pour la fibrose pulmonaire idiopathique basé sur les recommandations ATS/ERS/JRS/ALAT 2018, en utilisant les classifications des scanners HRCT.",
+  "requestFramePermissions": []
+}
