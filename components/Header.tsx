@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Header: React.FC = () => {
   return (
-    <header className="bg-gradient-to-br from-[#2c3e50] to-[#34495e] text-white p-8 text-center">
+    <header className="bg-gradient-to-br from-[#2c3e50] to-[#34495e] text-white p-8 text-center rounded-t-2xl">
       <h1 className="text-3xl md:text-4xl font-light mb-2">🫁 Aide au diagnostic et à la prise en charge de la fibrose
 pulmonaire idiopathique</h1>
       <p className="text-base md:text-lg opacity-90">

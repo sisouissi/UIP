@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback, createRef } from 'react';
 import { SECTIONS, DIAGNOSIS_RESULTS, TOTAL_QUESTIONS } from './constants';
 import { Answers, Diagnosis, Section as SectionType } from './types';
@@ -74,16 +73,17 @@ const App: React.FC = () => {
     }
   }, [answers, activeSection]);
 
-  // Scroll to active section to improve navigation on mobile
+  // Scroll to active section to improve navigation, especially on mobile.
   useEffect(() => {
     if (activeSection === null) return;
     const ref = sectionRefs[activeSection];
     // Small timeout to allow render and CSS transition to begin
     const timer = setTimeout(() => {
       if(ref?.current) {
+        // Using 'start' ensures the top of the section is visible, which is better for long sections.
         ref.current.scrollIntoView({
           behavior: 'smooth',
-          block: 'nearest'
+          block: 'start'
         });
       }
     }, 50);
@@ -161,7 +161,7 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden font-sans">
+    <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl font-sans">
       <Header />
       <main className="p-4 sm:p-6 md:p-10">
         
