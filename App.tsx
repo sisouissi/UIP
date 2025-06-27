@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, createRef } from 'react';
 import { SECTIONS, DIAGNOSIS_RESULTS, TOTAL_QUESTIONS } from './constants';
 import { Answers, Diagnosis, Section as SectionType } from './types';
 import { Header } from './components/Header';
@@ -15,6 +15,13 @@ const App: React.FC = () => {
   const [invalidSections, setInvalidSections] = useState<Set<number>>(new Set());
   const [diagnosisResult, setDiagnosisResult] = useState<Diagnosis | null>(null);
   const [showGlobalError, setShowGlobalError] = useState<boolean>(false);
+
+  const sectionRefs = useMemo(() =>
+    SECTIONS.reduce((acc, section) => {
+      acc[section.id] = createRef<HTMLDivElement>();
+      return acc;
+    }, {} as Record<number, React.RefObject<HTMLDivElement>>),
+  []);
 
   const completedQuestions = useMemo(() => Object.keys(answers).length, [answers]);
 
@@ -34,7 +41,7 @@ const App: React.FC = () => {
     validateSections();
   }, [answers, validateSections]);
 
-  const handleOptionChange = (name: string, value: string) => {
+  const handleOptionChange = useCallback((name: string, value: string) => {
     setAnswers(prev => ({ ...prev, [name]: value }));
     if (diagnosisResult) {
         setDiagnosisResult(null);
@@ -43,11 +50,11 @@ const App: React.FC = () => {
         setShowGlobalError(false);
         setInvalidSections(new Set());
     }
-  };
+  }, [diagnosisResult, showGlobalError]);
 
-  const handleToggleAccordion = (sectionId: number) => {
+  const handleToggleAccordion = useCallback((sectionId: number) => {
     setActiveSection(prev => (prev === sectionId ? null : sectionId));
-  };
+  }, []);
   
   useEffect(() => {
     // This effect handles auto-advancing to the next section when the current one is completed.
@@ -67,6 +74,23 @@ const App: React.FC = () => {
     }
   }, [answers, activeSection]);
 
+  // Scroll to active section to improve navigation on mobile
+  useEffect(() => {
+    if (activeSection === null) return;
+    const ref = sectionRefs[activeSection];
+    // Small timeout to allow render and CSS transition to begin
+    const timer = setTimeout(() => {
+      if(ref?.current) {
+        ref.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [activeSection, sectionRefs]);
+
 
   const calculateDiagnosis = () => {
     const validated = validateSections();
@@ -79,6 +103,12 @@ const App: React.FC = () => {
         }
       });
       setInvalidSections(newInvalidSections);
+
+      // Automatically open and scroll to the first invalid section
+      const firstInvalidId = Math.min(...Array.from(newInvalidSections));
+      if (isFinite(firstInvalidId)) {
+        setActiveSection(firstInvalidId);
+      }
       return;
     }
 
@@ -159,23 +189,24 @@ const App: React.FC = () => {
 
         <div className="space-y-4">
           {SECTIONS.map((section: SectionType) => (
-            <AccordionSection
-              key={section.id}
-              section={section}
-              isActive={activeSection === section.id}
-              isCompleted={completedSections.has(section.id)}
-              isInvalid={invalidSections.has(section.id)}
-              onToggle={() => handleToggleAccordion(section.id)}
-            >
-                {section.questions.map(question => (
-                    <QuestionGroup
-                        key={question.id}
-                        question={question}
-                        selectedValue={answers[question.name]}
-                        onChange={handleOptionChange}
-                    />
-                ))}
-            </AccordionSection>
+            <div key={section.id} ref={sectionRefs[section.id]}>
+              <AccordionSection
+                section={section}
+                isActive={activeSection === section.id}
+                isCompleted={completedSections.has(section.id)}
+                isInvalid={invalidSections.has(section.id)}
+                onToggle={() => handleToggleAccordion(section.id)}
+              >
+                  {section.questions.map(question => (
+                      <QuestionGroup
+                          key={question.id}
+                          question={question}
+                          selectedValue={answers[question.name]}
+                          onChange={handleOptionChange}
+                      />
+                  ))}
+              </AccordionSection>
+            </div>
           ))}
         </div>
 
